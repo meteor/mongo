@@ -182,6 +182,11 @@ add_option('ssl',
     nargs=0
 )
 
+add_option('openssl',
+    help='Library path to openssl',
+    nargs=1
+)
+
 add_option('wiredtiger',
     choices=['on', 'off'],
     const='on',
@@ -1206,6 +1211,9 @@ if debugBuild:
 else:
     env.AppendUnique( CPPDEFINES=[ 'NDEBUG' ] )
 
+if env.TargetOSIs('osx'):
+    env.Append( LINKFLAGS=['-static'] )
+
 if env.TargetOSIs('linux'):
     env.Append( LIBS=['m'] )
 
@@ -1428,9 +1436,16 @@ if has_option( "ssl" ):
     if env.TargetOSIs('windows'):
         env.Append( LIBS=["libeay32"] )
         env.Append( LIBS=["ssleay32"] )
+    elif env.TargetOSIs('osx'):
+        env.Append( LIBS=[File(os.path.join(get_option('openssl'), 'libssl.a'))] )
+        env.Append( LIBS=[File(os.path.join(get_option('openssl'), 'libcrypto.a'))] )
+        env.Append( LIBS=["z"] )
+        env.Append( LIBS=["dl"] )
     else:
         env.Append( LIBS=["ssl"] )
         env.Append( LIBS=["crypto"] )
+        env.Append( LIBS=["z"] )
+        env.Append( LIBS=["dl"] )
 else:
     env.Append( MONGO_CRYPTO=["tom"] )
 
